@@ -24,11 +24,11 @@ db_connected: bool = False
 
 
 def build_engine() -> AsyncEngine:
-    return create_async_engine(
-        settings.database_url,
-        echo=settings.debug,
-        pool_pre_ping=True,
-    )
+    kwargs: dict = {"echo": settings.debug, "pool_pre_ping": True}
+    connect_args = settings.connect_args
+    if connect_args:
+        kwargs["connect_args"] = connect_args
+    return create_async_engine(settings.database_url, **kwargs)
 
 
 def init_engine() -> None:

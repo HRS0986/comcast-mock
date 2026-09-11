@@ -13,6 +13,7 @@ dependencies = [
     "uvicorn>=0.52.4",
     "sqlalchemy[asyncio]>=2.0.41",
     "asyncpg>=0.30.0",
+    "psycopg[binary]>=3.2.9",
     "aiosqlite>=0.20.0",
     "pydantic-settings>=2.9.2",
     "python-dotenv>=1.1.0",
