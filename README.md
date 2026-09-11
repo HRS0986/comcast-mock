@@ -96,10 +96,43 @@ PGCHANNELBINDING='require'
 ## Running
 
 ```bash
-uv run uvicorn comcast_mock.main:app --reload   # hot-reload dev server
+uv run uvicorn comcast_mock.main:app --reload   # hot-reload dev server (FastAPI)
 # or
-comcast-mock                                      # console script
+comcast-mock                                      # console script (FastAPI)
 ```
+
+### MCP Server (FastMCP)
+
+All FastAPI endpoints are also exposed as MCP tools via FastMCP:
+
+```bash
+uv run python -m comcast_mock.mcp_server
+```
+
+MCP server runs on `http://0.0.0.0:8000` (HTTP transport). Kaya agents can call tools directly via the MCP protocol instead of HTTP.
+
+Available MCP tools (mapped from REST endpoints):
+
+| MCP Tool Name | Origin (FastAPI) |
+|---------------|------------------|
+| `health_check` | `GET /health` |
+| `create_ticket` | `POST /tickets/ingest` |
+| `list_tickets` | `GET /tickets` |
+| `get_ticket` | `GET /tickets/{id}` |
+| `update_ticket` | `PATCH /tickets/{id}` |
+| `create_investigation` | `POST /investigations` |
+| `list_investigations` | `GET /investigations` |
+| `get_investigation` | `GET /investigations/{id}` |
+| `get_analytics_summary` | `GET /analytics/summary` |
+| `list_categories` | `GET /categories` |
+| `list_sub_categories` | `GET /categories/{id}/sub-categories` |
+| `get_sub_category` | `GET /sub-categories/{id}` |
+| `get_device_status` | `GET /tools/device-status/{device_id}` |
+| `get_signal_metrics` | `GET /tools/signal-metrics/{device_id}` |
+| `get_event_logs` | `GET /tools/event-logs/{device_id}` |
+| `check_node_health` | `GET /tools/node-health/{node_id}` |
+| `get_customer_impact` | `GET /tools/customer-impact/{node_id}` |
+| `restart_device` | `POST /tools/restart-device` |
 
 API base URL: `http://localhost:8000/api/v1` (interactive docs at
 `http://localhost:8000/api/v1/docs`).
