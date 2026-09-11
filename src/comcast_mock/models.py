@@ -3,9 +3,13 @@ import uuid
 from typing import Optional
 
 from sqlalchemy import JSON, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from comcast_mock.database import Base
+
+# JSONB on PostgreSQL (per schema), JSON on SQLite (local dev fallback).
+JsonBinary = JSON().with_variant(JSONB(), "postgresql")
 
 
 def _gen_id() -> str:
@@ -69,5 +73,5 @@ class Investigation(Base):
         String(36), ForeignKey("tickets.id"), nullable=False, index=True
     )
     run_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    mcp_tools: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
-    inputs: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    mcp_tools: Mapped[list] = mapped_column(JsonBinary, nullable=False, default=list)
+    inputs: Mapped[list] = mapped_column(JsonBinary, nullable=False, default=list)
