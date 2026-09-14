@@ -1,7 +1,9 @@
+import hashlib
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from openai import OpenAI, OpenAIError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +22,13 @@ from comcast_mock.schemas import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["embeddings"])
+
+# Metadata fields that the knowledge-base indexer stamps on every uploaded
+# document. These mirror the shape produced by the real kb-vectorizer pipeline.
+KB_NAMESPACE = "customer-support-docs"
+KB_SOURCE_ID = "customer-support-kb"
+KB_INDEXED_BY = "kb-vectorizer"
+KB_FILE_DIR = "docs"
 
 
 def _get_openai_client() -> OpenAI:
@@ -49,28 +58,37 @@ async def _create_embedding(text: str, client: OpenAI) -> list[float]:
 
 @router.post(
     "/embeddings/upload",
-    response_model=EmbeddingOut,
+    response_model=KnowledgeBaseOut,
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
         500: {"model": ErrorResponse},
     },
 )
 async def upload_embedding(
+    sub_category_id: int = Form(..., description="Sub-category this document belongs to"),
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
 ) -> Any:
-    """Upload a markdown file and create an embedding.
+    """Upload a markdown file and index it into the knowledge base.
+
+    The file is embedded with OpenAI's text-embedding-3-small model and stored
+    as a ``knowledge_base`` row, stamped with indexer-style metadata (file
+    name, path, size, namespace, source id, timestamp, content hash, chunk
+    index) plus the caller-supplied ``sub_category_id``.
 
     Args:
-        file: Markdown file to embed
-        session: Database session
+        sub_category_id: Integer sub-category id the document maps to.
+        file: Markdown file to embed.
+        session: Database session.
 
     Returns:
-        EmbeddingOut: Created embedding record with vector
+        KnowledgeBaseOut: Created knowledge base record with vector and metadata.
 
     Raises:
-        HTTPException: If file is not readable or embedding fails
+        HTTPException: If the file is not readable, the sub-category is invalid,
+            or embedding creation fails.
     """
     # Validate file extension
     if not file.filename or not file.filename.lower().endswith(".md"):
@@ -94,17 +112,39 @@ async def upload_embedding(
     client = _get_openai_client()
     embedding_vector = await _create_embedding(text_content, client)
 
-    embedding = Embedding(
-        filename=file.filename,
+    kb_entry = KnowledgeBase(
+        sub_category_id=sub_category_id,
         content=text_content,
         embedding=embedding_vector,
-        model="text-embedding-3-small",
+        extra_metadata=_build_kb_metadata(
+            filename=file.filename,
+            content=text_content,
+            sub_category_id=sub_category_id,
+        ),
     )
-    session.add(embedding)
+    session.add(kb_entry)
     await session.commit()
-    await session.refresh(embedding)
+    await session.refresh(kb_entry)
 
-    return embedding
+    return kb_entry
+
+
+def _build_kb_metadata(
+    filename: str, content: str, sub_category_id: int
+) -> dict[str, Any]:
+    """Build the indexer-style metadata dict for a knowledge base entry."""
+    return {
+        "file_name": filename,
+        "file_path": f"{KB_FILE_DIR}\\{filename}",
+        "file_size": len(content.encode("utf-8")),
+        "namespace": KB_NAMESPACE,
+        "source_id": KB_SOURCE_ID,
+        "indexed_at": datetime.now(UTC).isoformat(),
+        "indexed_by": KB_INDEXED_BY,
+        "chunk_index": 0,
+        "content_hash": hashlib.sha256(content.encode("utf-8")).hexdigest(),
+        "sub_category_id": sub_category_id,
+    }
 
 
 @router.post(
