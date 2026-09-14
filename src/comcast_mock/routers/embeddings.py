@@ -8,8 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from comcast_mock.config import settings
 from comcast_mock.database import get_session
-from comcast_mock.models import Embedding
-from comcast_mock.schemas import EmbeddingCreateRequest, EmbeddingOut, ErrorResponse
+from comcast_mock.models import Embedding, KnowledgeBase
+from comcast_mock.schemas import (
+    EmbeddingCreateRequest,
+    EmbeddingOut,
+    ErrorResponse,
+    KnowledgeBaseCreateRequest,
+    KnowledgeBaseOut,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -233,3 +239,143 @@ async def delete_embedding(
 
     await session.delete(embedding)
     await session.commit()
+
+
+@router.post(
+    "/knowledge-base",
+    response_model=KnowledgeBaseOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
+)
+async def create_knowledge_base_entry(
+    request: KnowledgeBaseCreateRequest,
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Create a knowledge base entry with embedding.
+
+    Args:
+        request: Contains sub_category_id, content, and optional metadata
+        session: Database session
+
+    Returns:
+        KnowledgeBaseOut: Created knowledge base record with vector
+    """
+    client = _get_openai_client()
+    embedding_vector = await _create_embedding(request.content, client)
+
+    kb_entry = KnowledgeBase(
+        sub_category_id=request.sub_category_id,
+        content=request.content,
+        embedding=embedding_vector,
+        extra_metadata=request.metadata,
+    )
+    session.add(kb_entry)
+    await session.commit()
+    await session.refresh(kb_entry)
+
+    return kb_entry
+
+
+@router.get(
+    "/knowledge-base",
+    response_model=list[KnowledgeBaseOut],
+    responses={
+        200: {"description": "List of knowledge base entries"},
+    },
+)
+async def list_knowledge_base(
+    session: AsyncSession = Depends(get_session),
+    sub_category_id: int | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> Any:
+    """List knowledge base entries with optional filtering.
+
+    Args:
+        session: Database session
+        sub_category_id: Filter by integer sub-category id (optional)
+        limit: Number of entries to return (default 50, max 200)
+        offset: Number of entries to skip (default 0)
+
+    Returns:
+        List of KnowledgeBaseOut objects
+    """
+    query = select(KnowledgeBase)
+    if sub_category_id is not None:
+        query = query.where(KnowledgeBase.sub_category_id == sub_category_id)
+    query = query.limit(limit).offset(offset)
+    result = await session.execute(query)
+    entries = result.scalars().all()
+    return entries
+
+
+@router.get(
+    "/knowledge-base/{entry_id}",
+    response_model=KnowledgeBaseOut,
+    responses={
+        404: {"model": ErrorResponse},
+    },
+)
+async def get_knowledge_base_entry(
+    entry_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> Any:
+    """Get a specific knowledge base entry by ID.
+
+    Args:
+        entry_id: The knowledge base entry ID
+        session: Database session
+
+    Returns:
+        KnowledgeBaseOut: The knowledge base entry
+
+    Raises:
+        HTTPException: If entry not found
+    """
+    query = select(KnowledgeBase).where(KnowledgeBase.id == entry_id)
+    result = await session.execute(query)
+    entry = result.scalar_one_or_none()
+
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Knowledge base entry {entry_id} not found",
+        )
+
+    return entry
+
+
+@router.delete(
+    "/knowledge-base/{entry_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_knowledge_base_entry(
+    entry_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    """Delete a specific knowledge base entry by ID.
+
+    Args:
+        entry_id: The knowledge base entry ID
+        session: Database session
+
+    Raises:
+        HTTPException: If entry not found
+    """
+    query = select(KnowledgeBase).where(KnowledgeBase.id == entry_id)
+    result = await session.execute(query)
+    entry = result.scalar_one_or_none()
+
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Knowledge base entry {entry_id} not found",
+        )
+
+    await session.delete(entry)
+    await session.commit()
+
+

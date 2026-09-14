@@ -2,10 +2,13 @@ import enum
 import uuid
 from datetime import datetime
 from typing import Optional
+from typing import Any, Optional
 
 from sqlalchemy import JSON, DateTime, ForeignKey, String, Text, Uuid, func
+from sqlalchemy import JSON, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import UserDefinedType
 
 from comcast_mock.database import Base
 
@@ -103,4 +106,50 @@ class Embedding(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     embedding: Mapped[list[float]] = mapped_column(JsonBinary, nullable=False)
     model: Mapped[str] = mapped_column(String(50), nullable=False)
+
+
+class PGVector(UserDefinedType):
+    """Maps Postgres `vector` (USER-DEFINED) to a Python list of floats."""
+
+    cache_ok = True
+
+    def get_col_spec(self, **kw: Any) -> str:
+        return "vector"
+
+    def bind_processor(self, dialect: Any):
+        def process(value: list[float] | str | None) -> str | None:
+            if value is None:
+                return None
+            if isinstance(value, str):
+                return value
+            return "[" + ",".join(str(float(x)) for x in value) + "]"
+
+        return process
+
+    def result_processor(self, dialect: Any, coltype: Any):
+        def process(value: Any) -> list[float] | None:
+            if value is None:
+                return None
+            if isinstance(value, (list, tuple)):
+                return [float(x) for x in value]
+            text = str(value).strip().strip("[]")
+            if not text:
+                return []
+            return [float(x) for x in text.split(",")]
+
+        return process
+
+
+class KnowledgeBase(Base):
+    __tablename__ = "knowledge_base"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    sub_category_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float] | None] = mapped_column(PGVector, nullable=True)
+    # `metadata` is reserved on DeclarativeBase; map the DB column under another name.
+    extra_metadata: Mapped[dict[str, Any] | None] = mapped_column(
+        "metadata", JsonBinary, nullable=True
+    )
+
 

@@ -122,6 +122,12 @@ class EmbeddingCreateRequest(BaseModel):
     content: str
 
 
+class KnowledgeBaseCreateRequest(BaseModel):
+    sub_category_id: int
+    content: str
+    metadata: dict[str, Any] | None = None
+
+
 class EmbeddingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -130,4 +136,17 @@ class EmbeddingOut(BaseModel):
     content: str
     embedding: list[float]
     model: str
+
+
+class KnowledgeBaseOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: int
+    sub_category_id: int
+    content: str
+    embedding: list[float] | None = None
+    metadata: dict[str, Any] | None = Field(
+        default=None, validation_alias="extra_metadata"
+    )
+
 
