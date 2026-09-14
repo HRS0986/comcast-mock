@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,6 +13,28 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
+
+
+class CustomerOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    full_name: str
+    email: str
+    phone: str | None = None
+    account_number: str | None = None
+    country: str | None = None
+    status: str
+    created_at: datetime
+
+
+class CustomerCreate(BaseModel):
+    full_name: str
+    email: str
+    phone: str | None = None
+    account_number: str | None = None
+    country: str | None = None
+    status: str = "active"
 
 
 class CategoryOut(BaseModel):

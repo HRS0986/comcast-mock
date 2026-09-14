@@ -35,7 +35,7 @@ mcp = FastMCP.from_fastapi(
 
 
 def main() -> None:
-    mcp.run(transport="http", host="0.0.0.0", port=8000)
+    mcp.run(transport="http", host="0.0.0.0", port=8002)
 
 
 if __name__ == "__main__":

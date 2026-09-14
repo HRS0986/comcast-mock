@@ -1,8 +1,9 @@
 import enum
 import uuid
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, ForeignKey, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,6 +44,23 @@ class SubCategory(Base):
     description: Mapped[str | None] = mapped_column(Text)
 
     category: Mapped["Category"] = relationship()
+
+
+class Customer(Base):
+    __tablename__ = "customers"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    full_name: Mapped[str] = mapped_column(Text, nullable=False)
+    email: Mapped[str] = mapped_column(Text, nullable=False, unique=True, index=True)
+    phone: Mapped[str | None] = mapped_column(Text)
+    account_number: Mapped[str | None] = mapped_column(Text, unique=True, index=True)
+    country: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(
+        Text, nullable=False, default="active", server_default="active"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class Ticket(Base):
