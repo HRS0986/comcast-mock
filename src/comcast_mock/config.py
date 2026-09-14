@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     default_limit: int = 50
     max_limit: int = 200
     frontend_url: str = "http://localhost:3000"
+    openai_api_key: str = ""
 
 
 settings = Settings()

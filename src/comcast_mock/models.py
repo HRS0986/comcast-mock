@@ -75,3 +75,14 @@ class Investigation(Base):
     run_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     mcp_tools: Mapped[list] = mapped_column(JsonBinary, nullable=False, default=list)
     inputs: Mapped[list] = mapped_column(JsonBinary, nullable=False, default=list)
+
+
+class Embedding(Base):
+    __tablename__ = "embeddings"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_gen_id)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding: Mapped[list[float]] = mapped_column(JsonBinary, nullable=False)
+    model: Mapped[str] = mapped_column(String(50), nullable=False)
+

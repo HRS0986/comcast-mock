@@ -91,3 +91,19 @@ class AnalyticsSummaryOut(BaseModel):
     by_sub_category: dict[str, int] = Field(default_factory=dict)
     by_status: dict[str, int] = Field(default_factory=dict)
     total_investigations: int = 0
+
+
+class EmbeddingCreateRequest(BaseModel):
+    filename: str
+    content: str
+
+
+class EmbeddingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    filename: str
+    content: str
+    embedding: list[float]
+    model: str
+

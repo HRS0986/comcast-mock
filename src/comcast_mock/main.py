@@ -10,6 +10,7 @@ from comcast_mock.config import settings
 from comcast_mock.exceptions import register_exception_handlers
 from comcast_mock.routers.analytics import router as analytics_router
 from comcast_mock.routers.categories import router as categories_router
+from comcast_mock.routers.embeddings import router as embeddings_router
 from comcast_mock.routers.health import router as health_router
 from comcast_mock.routers.investigations import router as investigations_router
 from comcast_mock.routers.tickets import router as tickets_router
@@ -73,6 +74,7 @@ def create_app() -> FastAPI:
     app.include_router(tools_router, prefix=f"{settings.api_prefix}/tools")
     app.include_router(investigations_router, prefix=settings.api_prefix)
     app.include_router(analytics_router, prefix=settings.api_prefix)
+    app.include_router(embeddings_router, prefix=settings.api_prefix)
 
     return app
 
