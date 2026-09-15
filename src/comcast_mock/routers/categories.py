@@ -21,7 +21,7 @@ async def list_categories(session: AsyncSession = Depends(get_session)) -> list[
     response_model=list[SubCategoryOut],
 )
 async def list_sub_categories(
-    category_id: str,
+    category_id: int,
     session: AsyncSession = Depends(get_session),
 ) -> list[SubCategoryOut]:
     category = (
@@ -32,16 +32,14 @@ async def list_sub_categories(
     if category is None:
         raise not_found(f"Category {category_id} not found")
     result = await session.execute(
-        select(SubCategory)
-        .where(SubCategory.category_id == category_id)
-        .order_by(SubCategory.id)
+        select(SubCategory).where(SubCategory.category_id == category_id).order_by(SubCategory.id)
     )
     return result.scalars().all()
 
 
 @router.get("/sub-categories/{sub_category_id}", response_model=SubCategoryOut)
 async def get_sub_category(
-    sub_category_id: str,
+    sub_category_id: int,
     session: AsyncSession = Depends(get_session),
 ) -> SubCategoryOut:
     sub = (

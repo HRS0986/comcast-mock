@@ -40,7 +40,7 @@ class CustomerCreate(BaseModel):
 class CategoryOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     name: str
     description: str | None = None
 
@@ -48,20 +48,20 @@ class CategoryOut(BaseModel):
 class SubCategoryOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     name: str
-    category_id: str
+    category_id: int
     description: str | None = None
 
 
 class TicketOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: int
     title: str
     description: str | None = None
-    category_id: str | None = None
-    sub_category_id: str | None = None
+    category_id: int | None = None
+    sub_category_id: int | None = None
     status: str
 
 
@@ -73,31 +73,31 @@ class TicketDetailOut(TicketOut):
 class TicketIngestRequest(BaseModel):
     title: str
     description: str | None = None
-    category_id: str | None = None
-    sub_category_id: str | None = None
+    category_id: int | None = None
+    sub_category_id: int | None = None
 
 
 class TicketUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     status: str | None = None
-    category_id: str | None = None
-    sub_category_id: str | None = None
+    category_id: int | None = None
+    sub_category_id: int | None = None
 
 
 class InvestigationOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
-    ticket_id: str
-    run_id: str
+    id: int
+    ticket_id: int
+    run_id: UUID
     mcp_tools: list[str] = Field(default_factory=list)
     inputs: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class InvestigationCreate(BaseModel):
-    ticket_id: str
-    run_id: str | None = None
+    ticket_id: int
+    run_id: UUID | None = None
     mcp_tools: list[str] = Field(default_factory=list)
     inputs: list[dict[str, Any]] = Field(default_factory=list)
 
@@ -111,8 +111,8 @@ class PaginatedResponse(BaseModel):
 
 class AnalyticsSummaryOut(BaseModel):
     total_tickets: int
-    by_category: dict[str, int] = Field(default_factory=dict)
-    by_sub_category: dict[str, int] = Field(default_factory=dict)
+    by_category: dict[int, int] = Field(default_factory=dict)
+    by_sub_category: dict[int, int] = Field(default_factory=dict)
     by_status: dict[str, int] = Field(default_factory=dict)
     total_investigations: int = 0
 
@@ -145,8 +145,4 @@ class KnowledgeBaseOut(BaseModel):
     sub_category_id: int
     content: str
     embedding: list[float] | None = None
-    metadata: dict[str, Any] | None = Field(
-        default=None, validation_alias="extra_metadata"
-    )
-
-
+    metadata: dict[str, Any] | None = Field(default=None, validation_alias="extra_metadata")

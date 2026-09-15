@@ -3,100 +3,111 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from comcast_mock.models import Category, SubCategory, Ticket
 
-CATEGORIES_DATA: list[tuple[str, str, str | None]] = [
-    ("cat-1", "Network & Connectivity", "Modem, signal, and node network issues."),
-    ("cat-2", "Billing & Account", "Charges, payments, billing disputes, account changes."),
-    ("cat-3", "Equipment & Provisioning", "Device replacement, shipment, provisioning."),
-    ("cat-4", "Speed & Performance", "Throughput, latency, performance degradation."),
-    ("cat-5", "Service Interruption", "Outages, partial service loss, regional issues."),
-    ("cat-6", "Installation & New Service", "New installs, transfers, self-install kits."),
-    ("cat-7", "Technical Support", "Device, app, and access troubleshooting."),
-    ("cat-8", "Security & Privacy", "Security events, privacy, compromised accounts."),
-    ("cat-9", "Data Usage & Caps", "Data cap overages, usage, policy questions."),
-    ("cat-10", "Feedback & Escalations", "Feedback, escalations, executive relations."),
-]
-
-_SUBCATEGORIES_DATA: list[tuple[str, str, str]] = [
-    ("cat-1", "cat-1.1", "Modem Offline / No Sync"),
-    ("cat-1", "cat-1.2", "Degraded Signal / Intermittent Drop"),
-    ("cat-1", "cat-1.3", "Upstream Noise"),
-    ("cat-1", "cat-1.4", "Node Outage"),
-    ("cat-1", "cat-1.5", "Provisioning Failure"),
-    ("cat-2", "cat-2.1", "Unexpected Charges"),
-    ("cat-2", "cat-2.2", "Billing Cycle Change"),
-    ("cat-2", "cat-2.3", "Payment Not Applied"),
-    ("cat-2", "cat-2.4", "Refund Request"),
-    ("cat-2", "cat-2.5", "Duplicate Bill"),
-    ("cat-3", "cat-3.1", "Equipment Replacement"),
-    ("cat-3", "cat-3.2", "Self-Install Kit Issues"),
-    ("cat-3", "cat-3.3", "Wrong Equipment Shipped"),
-    ("cat-3", "cat-3.4", "DOCSIS Provisioning Error"),
-    ("cat-3", "cat-3.5", "Rental Equipment Return"),
-    ("cat-4", "cat-4.1", "Low Speed Test Results"),
-    ("cat-4", "cat-4.2", "High Latency"),
-    ("cat-4", "cat-4.3", "Packet Loss"),
-    ("cat-4", "cat-4.4", "WiFi Dropout"),
-    ("cat-4", "cat-4.5", "Throttling Concern"),
-    ("cat-5", "cat-5.1", "Partial Outage"),
-    ("cat-5", "cat-5.2", "Full Service Outage"),
-    ("cat-5", "cat-5.3", "Intermittent Regional Outage"),
-    ("cat-5", "cat-5.4", "Planned Maintenance Impact"),
-    ("cat-5", "cat-5.5", "Scheduled Maintenance"),
-    ("cat-6", "cat-6.1", "Missed Appointment"),
-    ("cat-6", "cat-6.2", "New Install Failed"),
-    ("cat-6", "cat-6.3", "Transfer / Move Request"),
-    ("cat-6", "cat-6.4", "Service Activation Delay"),
-    ("cat-6", "cat-6.5", "Self-Install Setup Help"),
-    ("cat-7", "cat-7.1", "App Login / Portal Issue"),
-    ("cat-7", "cat-7.2", "Device Setup Help"),
-    ("cat-7", "cat-7.3", "Password Reset"),
-    ("cat-7", "cat-7.4", "Channel / Guide Problems"),
-    ("cat-7", "cat-7.5", "Email / Xfinity Connect"),
-    ("cat-8", "cat-8.1", "Security Breach Report"),
-    ("cat-8", "cat-8.2", "Spam / Phishing Concerns"),
-    ("cat-8", "cat-8.3", "Malware / Botnet"),
-    ("cat-8", "cat-8.4", "Privacy Data Request"),
-    ("cat-8", "cat-8.5", "Unauthorized Access"),
-    ("cat-9", "cat-9.1", "Data Cap Warning"),
-    ("cat-9", "cat-9.2", "Data Cap Overage Charge"),
-    ("cat-9", "cat-9.3", "Usage Report Inaccuracy"),
-    ("cat-9", "cat-9.4", "Data Cap Exemption Request"),
-    ("cat-9", "cat-9.5", "Unlimited Data Upgrade"),
-    ("cat-10", "cat-10.1", "General Complaint"),
-    ("cat-10", "cat-10.2", "Executive Escalation"),
-    ("cat-10", "cat-10.3", "Billing Escalation"),
-    ("cat-10", "cat-10.4", "Service Quality Escalation"),
-    ("cat-10", "cat-10.5", "Positive Feedback"),
-]
-
-_TICKET_DATA: list[tuple[str, str, str | None, str, str]] = [
+# Reference data mirrors the live Neon schema (integer auto-increment IDs).
+# Insertion order reproduces the same integers on a fresh database, so the
+# seed is deterministic whether run against Neon or the local SQLite fallback.
+CATEGORIES_DATA: list[tuple[int, str, str]] = [
     (
-        "3f2a9c1e-4b8d-4e2a-9c1e-4b8d4e2a9c1e",
+        1,
+        "Refund",
+        "Issues where a customer is owed money back — from a service credit, an "
+        "overpayment, a cancelled order, or a billing correction — and is asking "
+        "about the status, amount, or method of that refund",
+    ),
+    (
+        2,
+        "Technical Support",
+        "Technical problems and application issues",
+    ),
+    (
+        3,
+        "Account",
+        "Customer account related issues",
+    ),
+    (
+        4,
+        "Network",
+        "Internet and network related issues",
+    ),
+    (
+        5,
+        "Promotions",
+        "Issues related to promotional offers — discounts, bundles, or "
+        "introductory pricing not applying, expiring, or matching what the "
+        "customer was told.",
+    ),
+]
+
+_SUBCATEGORIES_DATA: list[tuple[int, str, int, str]] = [
+    (1, "Invoice Explanation", 2, "Questions about invoice charges"),
+    (2, "Payment Issue", 2, "Problems with customer payments"),
+    (3, "Unexpected Charge", 2, "Customer does not recognize a charge"),
+    (
+        4,
+        "Local",
+        1,
+        "Refunds processed to a domestic account or payment method (in-country bank "
+        "transfer, local card, local billing address)",
+    ),
+    (
+        5,
+        "International",
+        1,
+        "Refunds involving a payment method, bank account, or billing address outside "
+        "the country, which may involve currency conversion, longer processing "
+        "times, or cross-border transfer requirements.",
+    ),
+    (6, "Profile Update", 3, "Customer wants to update account information"),
+    (7, "Account Closure", 3, "Customer wants to close their account"),
+    (8, "Internet Connection", 4, "Customer cannot connect to the internet"),
+    (9, "Slow Internet", 4, "Customer reports slow internet"),
+    (
+        10,
+        "Promo Not Applied",
+        5,
+        "Customer signed up for or was promised a promotional rate, but it isn't "
+        "reflected on the account or bill.",
+    ),
+    (
+        11,
+        "Promo Expired / Price Increase",
+        5,
+        "Customer's promotional period ended and they were moved to standard "
+        "pricing, often without expecting it.",
+    ),
+    (
+        12,
+        "Promo Eligibility Dispute",
+        5,
+        "Customer believes they qualify for an offer (new customer deal, loyalty "
+        "offer, bundle discount) but the system or agent says they don't.",
+    ),
+]
+
+_TICKET_DATA: list[tuple[str, str, str | None, int | None, int | None]] = [
+    (
         "Internet is down - no sync on cable modem",
         "Arris SB8200 shows no downstream lock; modem offline.",
-        "cat-1",
-        "cat-1.1",
+        4,
+        8,
     ),
     (
-        "4a7b2f3c-1d5e-4f3a-8b2c-4a7b2f3c1d5e",
         "Frequent connection drops every few minutes",
         "Intermittent loss on NODE-4471; high corrected codewords.",
-        "cat-1",
-        "cat-1.2",
+        4,
+        9,
     ),
     (
-        "5c3d8a7b-9e1f-4a5c-8d7b-5c3d8a7b9e1f",
         "Slow speeds - 900 Mbps plan delivering 40 Mbps",
         "Gigabit plan only seeing fraction of expected throughput.",
-        "cat-4",
-        "cat-4.1",
+        4,
+        9,
     ),
     (
-        "6e2a4b8c-1d5f-4a7c-8b2e-6e2a4b8c1d5f",
         "Billing discrepancy - unexpected charge",
         "Customer was charged $25 equipment fee not previously disclosed.",
-        "cat-2",
-        "cat-2.1",
+        2,
+        3,
     ),
 ]
 
@@ -109,33 +120,32 @@ def build_categories() -> list[Category]:
 
 def build_subcategories() -> list[SubCategory]:
     return [
-        SubCategory(id=sid, name=name, category_id=cat_id)
-        for cat_id, sid, name in _SUBCATEGORIES_DATA
+        SubCategory(id=sid, name=name, category_id=cat_id, description=desc)
+        for sid, name, cat_id, desc in _SUBCATEGORIES_DATA
     ]
 
 
 def build_tickets() -> list[Ticket]:
     return [
         Ticket(
-            id=tid,
             title=title,
             description=desc,
             category_id=cat_id,
             sub_category_id=sub_id,
             status=status,
         )
-        for (tid, title, desc, cat_id, sub_id), status in zip(
-            _TICKET_DATA, _TICKET_STATUS, strict=True
-        )
+        for (title, desc, cat_id, sub_id), status in zip(_TICKET_DATA, _TICKET_STATUS, strict=True)
     ]
 
 
 async def seed_database(session: AsyncSession) -> None:
     cat_count = (await session.execute(select(Category.id))).scalars().all()
-    if cat_count:
-        return
-
-    session.add_all(build_categories())
-    session.add_all(build_subcategories())
-    session.add_all(build_tickets())
+    if not cat_count:
+        session.add_all(build_categories())
+    sub_count = (await session.execute(select(SubCategory.id))).scalars().all()
+    if not sub_count:
+        session.add_all(build_subcategories())
+    ticket_count = (await session.execute(select(Ticket.id))).scalars().all()
+    if not ticket_count:
+        session.add_all(build_tickets())
     await session.commit()

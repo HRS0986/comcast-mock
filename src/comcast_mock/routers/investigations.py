@@ -32,7 +32,7 @@ async def create_investigation(
             detail="mcp_tools and inputs must have the same length and order",
         )
 
-    run_id = payload.run_id or f"run-{uuid.uuid4().hex[:12]}"
+    run_id = payload.run_id or uuid.uuid4()
 
     investigation = Investigation(
         ticket_id=payload.ticket_id,
@@ -48,7 +48,7 @@ async def create_investigation(
 
 @router.get("/investigations", response_model=PaginatedResponse)
 async def list_investigations(
-    ticket_id: str | None = Query(default=None, description="Filter investigations for a ticket."),
+    ticket_id: int | None = Query(default=None, description="Filter investigations for a ticket."),
     pagination: tuple[int, int] = Depends(pagination),
     session: AsyncSession = Depends(get_session),
 ) -> PaginatedResponse:
@@ -57,27 +57,19 @@ async def list_investigations(
     if ticket_id is not None:
         stmt = stmt.where(Investigation.ticket_id == ticket_id)
 
-    total = (
-        await session.execute(select(func.count()).select_from(stmt.subquery()))
-    ).scalar() or 0
+    total = (await session.execute(select(func.count()).select_from(stmt.subquery()))).scalar() or 0
     result = await session.execute(stmt.order_by(Investigation.id).limit(limit).offset(offset))
     items = [InvestigationOut.model_validate(inv) for inv in result.scalars().all()]
-    return PaginatedResponse(
-        items=items, total=total, limit=limit, offset=offset
-    )
+    return PaginatedResponse(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("/investigations/{investigation_id}", response_model=InvestigationOut)
 async def get_investigation(
-    investigation_id: str,
+    investigation_id: int,
     session: AsyncSession = Depends(get_session),
 ) -> InvestigationOut:
     investigation = (
-        (
-            await session.execute(
-                select(Investigation).where(Investigation.id == investigation_id)
-            )
-        )
+        (await session.execute(select(Investigation).where(Investigation.id == investigation_id)))
         .scalars()
         .one_or_none()
     )

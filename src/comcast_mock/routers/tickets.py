@@ -70,8 +70,8 @@ async def ingest_ticket(
 @router.get("/tickets", response_model=PaginatedResponse)
 async def list_tickets(
     status: str | None = Query(default=None, description="Filter by ticket status."),
-    category_id: str | None = Query(default=None, description="Filter by category id."),
-    sub_category_id: str | None = Query(default=None, description="Filter by sub-category id."),
+    category_id: int | None = Query(default=None, description="Filter by category id."),
+    sub_category_id: int | None = Query(default=None, description="Filter by sub-category id."),
     pagination: tuple[int, int] = Depends(pagination),
     session: AsyncSession = Depends(get_session),
 ) -> PaginatedResponse:
@@ -84,19 +84,15 @@ async def list_tickets(
     if sub_category_id is not None:
         stmt = stmt.where(Ticket.sub_category_id == sub_category_id)
 
-    total = (
-        await session.execute(select(func.count()).select_from(stmt.subquery()))
-    ).scalar() or 0
+    total = (await session.execute(select(func.count()).select_from(stmt.subquery()))).scalar() or 0
     result = await session.execute(stmt.order_by(Ticket.id).limit(limit).offset(offset))
     items = [TicketOut.model_validate(t) for t in result.scalars().all()]
-    return PaginatedResponse(
-        items=items, total=total, limit=limit, offset=offset
-    )
+    return PaginatedResponse(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.get("/tickets/{ticket_id}", response_model=TicketDetailOut)
 async def get_ticket(
-    ticket_id: str,
+    ticket_id: int,
     session: AsyncSession = Depends(get_session),
 ) -> TicketDetailOut:
     ticket = (
@@ -117,7 +113,7 @@ async def get_ticket(
 
 @router.patch("/tickets/{ticket_id}", response_model=TicketOut)
 async def update_ticket(
-    ticket_id: str,
+    ticket_id: int,
     payload: TicketUpdate,
     session: AsyncSession = Depends(get_session),
 ) -> TicketOut:

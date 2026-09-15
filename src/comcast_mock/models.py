@@ -1,11 +1,9 @@
 import enum
 import uuid
 from datetime import datetime
-from typing import Optional
 from typing import Any, Optional
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, Text, Uuid, func
-from sqlalchemy import JSON, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, Uuid, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import UserDefinedType
@@ -31,7 +29,7 @@ class TicketStatus(enum.StrEnum):
 class Category(Base):
     __tablename__ = "categories"
 
-    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
 
@@ -39,11 +37,9 @@ class Category(Base):
 class SubCategory(Base):
     __tablename__ = "sub_categories"
 
-    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    category_id: Mapped[str] = mapped_column(
-        String(50), ForeignKey("categories.id"), nullable=False
-    )
+    category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id"), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
 
     category: Mapped["Category"] = relationship()
@@ -69,18 +65,12 @@ class Customer(Base):
 class Ticket(Base):
     __tablename__ = "tickets"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_gen_id)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
-    category_id: Mapped[str | None] = mapped_column(
-        String(50), ForeignKey("categories.id")
-    )
-    sub_category_id: Mapped[str | None] = mapped_column(
-        String(50), ForeignKey("sub_categories.id")
-    )
-    status: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=TicketStatus.NEW.value
-    )
+    category_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("categories.id"))
+    sub_category_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("sub_categories.id"))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default=TicketStatus.NEW.value)
 
     category: Mapped[Optional["Category"]] = relationship()
     sub_category: Mapped[Optional["SubCategory"]] = relationship()
@@ -89,11 +79,11 @@ class Ticket(Base):
 class Investigation(Base):
     __tablename__ = "investigations"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_gen_id)
-    ticket_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tickets.id"), nullable=False, index=True
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tickets.id"), nullable=False, index=True
     )
-    run_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    run_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True, index=True)
     mcp_tools: Mapped[list] = mapped_column(JsonBinary, nullable=False, default=list)
     inputs: Mapped[list] = mapped_column(JsonBinary, nullable=False, default=list)
 
@@ -151,5 +141,3 @@ class KnowledgeBase(Base):
     extra_metadata: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata", JsonBinary, nullable=True
     )
-
-

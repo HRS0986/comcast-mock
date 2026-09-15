@@ -10,8 +10,8 @@ from comcast_mock.config import settings
 from comcast_mock.exceptions import register_exception_handlers
 from comcast_mock.routers.analytics import router as analytics_router
 from comcast_mock.routers.categories import router as categories_router
-from comcast_mock.routers.embeddings import router as embeddings_router
 from comcast_mock.routers.customers import router as customers_router
+from comcast_mock.routers.embeddings import router as embeddings_router
 from comcast_mock.routers.health import router as health_router
 from comcast_mock.routers.investigations import router as investigations_router
 from comcast_mock.routers.tickets import router as tickets_router

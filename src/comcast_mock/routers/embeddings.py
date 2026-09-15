@@ -129,9 +129,7 @@ async def upload_embedding(
     return kb_entry
 
 
-def _build_kb_metadata(
-    filename: str, content: str, sub_category_id: int
-) -> dict[str, Any]:
+def _build_kb_metadata(filename: str, content: str, sub_category_id: int) -> dict[str, Any]:
     """Build the indexer-style metadata dict for a knowledge base entry."""
     return {
         "file_name": filename,
@@ -417,5 +415,3 @@ async def delete_knowledge_base_entry(
 
     await session.delete(entry)
     await session.commit()
-
-

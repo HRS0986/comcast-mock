@@ -35,9 +35,7 @@ def init_engine() -> None:
     global engine, session_factory
     if engine is None:
         engine = build_engine()
-        session_factory = async_sessionmaker(
-            engine, class_=AsyncSession, expire_on_commit=False
-        )
+        session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def dispose_engine() -> None:

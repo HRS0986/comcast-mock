@@ -50,14 +50,19 @@ Built strictly to the schema (no extra columns):
 
 | Table          | Columns                                                       |
 |----------------|---------------------------------------------------------------|
-| `categories`   | `id`, `name`, `description`                                   |
-| `sub_categories` | `id`, `name`, `category_id` (FK), `description`              |
-| `tickets`      | `id`, `title`, `description`, `category_id` (FK), `sub_category_id` (FK), `status` |
-| `investigations` | `id`, `ticket_id` (FK), `run_id`, `mcp_tools` (JSONB), `inputs` (JSONB) |
+| `categories`   | `id` (integer PK), `name`, `description`                      |
+| `sub_categories` | `id` (integer PK), `name`, `category_id` (FK, integer), `description` |
+| `tickets`      | `id` (integer PK), `title`, `description`, `category_id` (FK, integer), `sub_category_id` (FK, integer), `status` |
+| `investigations` | `id` (integer PK), `ticket_id` (FK, integer), `run_id` (UUID), `mcp_tools` (JSONB), `inputs` (JSONB) |
 
 `mcp_tools` and `inputs` are parallel arrays: `mcp_tools[i]` was invoked with
 `inputs[i]`. On PostgreSQL they are created as `JSONB`; on the local SQLite
 fallback they use the generic `JSON` type.
+
+All primary/foreign keys are **integers** (auto-increment sequences), except
+`customers.id` and `investigations.run_id`, which are UUIDs. Reference data
+(`categories` / `sub_categories`) is seeded to match the live Neon database,
+so the same integers reproduce on a fresh DB.
 
 Tables are created with `Base.metadata.create_all` and seeded automatically on
 startup (idempotent — safe to run repeatedly). **No migrations tool is wired up
@@ -158,16 +163,18 @@ Common patterns:
 - `GET /tickets` — list, filterable by `?status=&category_id=&sub_category_id=`, paginated.
 - `GET /tickets/{ticket_id}` — full detail incl. nested `category` + `sub_category`.
 - `PATCH /tickets/{ticket_id}` — Kaya writes back classification/status:
-  `{ "status": "resolved", "category_id": "cat-1", "sub_category_id": "cat-1.1" }`.
+  `{ "status": "resolved", "category_id": 4, "sub_category_id": 9 }`.
 
 ### Categories & Sub-Categories
 - `GET /categories` → all categories (static reference data).
 - `GET /categories/{category_id}/sub-categories` → sub-categories for a category.
 - `GET /sub-categories/{sub_category_id}` → a single sub-category.
 
-Seeded reference data: 10 categories × 5 sub-categories = 50 entries, e.g.
-`cat-1` → `Network & Connectivity`; sub-categories `cat-1.1` (Modem Offline) … `cat-1.5`.
-Mock ticket data is seeded only under `cat-1.1` and `cat-1.2`.
+Seeded reference data mirrors the live Neon database: 5 categories (`1`
+Refund, `2` Technical Support, `3` Account, `4` Network, `5` Promotions) and
+12 sub-categories. Insertion order reproduces the same integers on a fresh
+database. Mock ticket data is seeded under category `4` (Network), sub-categories
+`8` (Internet Connection) and `9` (Slow Internet).
 
 ### Mock Device / Network Tools (read-only, deterministic)
 | Tool              | Method | Endpoint                                       |
@@ -188,7 +195,10 @@ Audit trail of which tools Kaya invoked and with what inputs, on a given run.
 ```jsonc
 { "ticket_id": "tkt-...", "run_id": "run-...", "mcp_tools": ["check_node_health","get_signal_metrics"], "inputs": [{"node_id":"NODE-4471"},{"device_id":"CM-88213"}] }
 ```
-`run_id` is **optional**; if omitted the backend generates `run-<12hex>`.
+`run_id` is **optional**; if omitted the backend generates a random UUID. On
+the Neon database `run_id` is stored as a `uuid` column, so callers must pass
+a UUID string (e.g. `123e4567-e89b-12d3-a456-426614174000`), not a `run-…`
+string.
 
 ### Analytics
 - `GET /analytics/summary` → `{ total_tickets, by_category, by_sub_category, by_status, total_investigations }` (pure SQL aggregations).

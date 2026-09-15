@@ -16,30 +16,24 @@ async def analytics_summary(
     total = (await session.execute(select(func.count()).select_from(Ticket))).scalar() or 0
 
     by_category: dict[str, int] = {}
-    for cid, cnt in (
-        await session.execute(
-            select(Ticket.category_id, func.count())
-            .where(Ticket.category_id.is_not(None))
-            .group_by(Ticket.category_id)
-        )
+    for cid, cnt in await session.execute(
+        select(Ticket.category_id, func.count())
+        .where(Ticket.category_id.is_not(None))
+        .group_by(Ticket.category_id)
     ):
         by_category[cid] = cnt
 
     by_sub_category: dict[str, int] = {}
-    for sid, cnt in (
-        await session.execute(
-            select(Ticket.sub_category_id, func.count())
-            .where(Ticket.sub_category_id.is_not(None))
-            .group_by(Ticket.sub_category_id)
-        )
+    for sid, cnt in await session.execute(
+        select(Ticket.sub_category_id, func.count())
+        .where(Ticket.sub_category_id.is_not(None))
+        .group_by(Ticket.sub_category_id)
     ):
         by_sub_category[sid] = cnt
 
     by_status: dict[str, int] = {}
-    for stat, cnt in (
-        await session.execute(
-            select(Ticket.status, func.count()).group_by(Ticket.status)
-        )
+    for stat, cnt in await session.execute(
+        select(Ticket.status, func.count()).group_by(Ticket.status)
     ):
         by_status[stat] = cnt
 
