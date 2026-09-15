@@ -2,8 +2,18 @@
 
 from __future__ import annotations
 
-from comcast_mock.main import app
 from fastmcp import FastMCP
+
+from comcast_mock import database
+from comcast_mock.main import app
+
+# FastMCP drives the FastAPI app in-process via httpx2.ASGITransport, which calls
+# the ASGI app directly and therefore never triggers the FastAPI ``lifespan``
+# startup hook. That hook is what calls ``database.init_engine()``. Without it,
+# every endpoint that uses ``get_session`` raises
+# ``RuntimeError: Database engine has not been initialized``. Initialize the
+# engine here so the MCP server shares the same DB state as the FastAPI server.
+database.init_engine()
 
 MCP_NAMES = {
     "health": "health_check",
