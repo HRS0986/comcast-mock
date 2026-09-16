@@ -25,6 +25,8 @@ MCP_NAMES = {
     "list_categories": "list_categories",
     "list_sub_categories": "list_sub_categories",
     "get_sub_category": "get_sub_category",
+    "check_promo_application": "check_promo_application",
+    "check_promo_expiry": "check_promo_expiry",
 }
 
 mcp = FastMCP.from_fastapi(
