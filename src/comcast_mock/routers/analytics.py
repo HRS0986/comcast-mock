@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from comcast_mock.database import get_session
-from comcast_mock.models import Investigation, Ticket
+from comcast_mock.models import Ticket
 from comcast_mock.schemas import AnalyticsSummaryOut
 
 router = APIRouter()
@@ -37,14 +37,9 @@ async def analytics_summary(
     ):
         by_status[stat] = cnt
 
-    total_investigations = (
-        await session.execute(select(func.count()).select_from(Investigation))
-    ).scalar() or 0
-
     return AnalyticsSummaryOut(
         total_tickets=total,
         by_category=by_category,
         by_sub_category=by_sub_category,
         by_status=by_status,
-        total_investigations=total_investigations,
     )

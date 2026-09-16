@@ -21,19 +21,10 @@ MCP_NAMES = {
     "list_tickets": "list_tickets",
     "get_ticket": "get_ticket",
     "update_ticket": "update_ticket",
-    "create_investigation": "create_investigation",
-    "list_investigations": "list_investigations",
-    "get_investigation": "get_investigation",
     "analytics_summary": "get_analytics_summary",
     "list_categories": "list_categories",
     "list_sub_categories": "list_sub_categories",
     "get_sub_category": "get_sub_category",
-    "device_status": "get_device_status",
-    "signal_metrics": "get_signal_metrics",
-    "event_logs": "get_event_logs",
-    "node_health": "check_node_health",
-    "customer_impact": "get_customer_impact",
-    "restart_device_endpoint": "restart_device",
 }
 
 mcp = FastMCP.from_fastapi(

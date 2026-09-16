@@ -1,6 +1,4 @@
-from datetime import datetime
 from typing import Any
-from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,28 +11,6 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
-
-
-class CustomerOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    full_name: str
-    email: str
-    phone: str | None = None
-    account_number: str | None = None
-    country: str | None = None
-    status: str
-    created_at: datetime
-
-
-class CustomerCreate(BaseModel):
-    full_name: str
-    email: str
-    phone: str | None = None
-    account_number: str | None = None
-    country: str | None = None
-    status: str = "active"
 
 
 class CategoryOut(BaseModel):
@@ -85,23 +61,6 @@ class TicketUpdate(BaseModel):
     sub_category_id: int | None = None
 
 
-class InvestigationOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    ticket_id: int
-    run_id: UUID
-    mcp_tools: list[str] = Field(default_factory=list)
-    inputs: list[dict[str, Any]] = Field(default_factory=list)
-
-
-class InvestigationCreate(BaseModel):
-    ticket_id: int
-    run_id: UUID | None = None
-    mcp_tools: list[str] = Field(default_factory=list)
-    inputs: list[dict[str, Any]] = Field(default_factory=list)
-
-
 class PaginatedResponse(BaseModel):
     items: list[Any]
     total: int
@@ -114,12 +73,6 @@ class AnalyticsSummaryOut(BaseModel):
     by_category: dict[int, int] = Field(default_factory=dict)
     by_sub_category: dict[int, int] = Field(default_factory=dict)
     by_status: dict[str, int] = Field(default_factory=dict)
-    total_investigations: int = 0
-
-
-class EmbeddingCreateRequest(BaseModel):
-    filename: str
-    content: str
 
 
 class KnowledgeBaseCreateRequest(BaseModel):
@@ -128,21 +81,11 @@ class KnowledgeBaseCreateRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class EmbeddingOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    filename: str
-    content: str
-    embedding: list[float]
-    model: str
-
-
 class KnowledgeBaseOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     sub_category_id: int
     content: str
     embedding: list[float] | None = None
-    metadata: dict[str, Any] | None = Field(default=None, validation_alias="extra_metadata")
+    metadata: dict[str, Any] | None = Field(default=None, validation_alias="metadata_value")
