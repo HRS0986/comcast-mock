@@ -30,6 +30,8 @@ MCP_NAMES = {
     "initiate_domestic_refund": "initiate_domestic_refund",
     "initiate_international_refund": "initiate_international_refund",
     "check_refund_status": "check_refund_status",
+    "check_login_status": "check_login_status",
+    "unlock_account": "unlock_account",
 }
 
 mcp = FastMCP.from_fastapi(

@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from comcast_mock import database
 from comcast_mock.config import settings
 from comcast_mock.exceptions import register_exception_handlers
+from comcast_mock.routers.account_access import router as account_access_router
 from comcast_mock.routers.analytics import router as analytics_router
 from comcast_mock.routers.categories import router as categories_router
 from comcast_mock.routers.customers import router as customers_router
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(health_router)
+    app.include_router(account_access_router, prefix=settings.api_prefix)
     app.include_router(customers_router, prefix=settings.api_prefix)
     app.include_router(tickets_router, prefix=settings.api_prefix)
     app.include_router(categories_router, prefix=settings.api_prefix)
