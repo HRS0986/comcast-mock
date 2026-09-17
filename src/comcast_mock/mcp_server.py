@@ -27,6 +27,9 @@ MCP_NAMES = {
     "get_sub_category": "get_sub_category",
     "check_promo_application": "check_promo_application",
     "check_promo_expiry": "check_promo_expiry",
+    "initiate_domestic_refund": "initiate_domestic_refund",
+    "initiate_international_refund": "initiate_international_refund",
+    "check_refund_status": "check_refund_status",
 }
 
 mcp = FastMCP.from_fastapi(

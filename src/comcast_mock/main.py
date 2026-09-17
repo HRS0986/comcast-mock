@@ -13,6 +13,7 @@ from comcast_mock.routers.categories import router as categories_router
 from comcast_mock.routers.customers import router as customers_router
 from comcast_mock.routers.health import router as health_router
 from comcast_mock.routers.promos import router as promos_router
+from comcast_mock.routers.refunds import router as refunds_router
 from comcast_mock.routers.tickets import router as tickets_router
 from comcast_mock.seed import seed_database
 
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(tickets_router, prefix=settings.api_prefix)
     app.include_router(categories_router, prefix=settings.api_prefix)
     app.include_router(promos_router, prefix=settings.api_prefix)
+    app.include_router(refunds_router, prefix=settings.api_prefix)
     app.include_router(analytics_router, prefix=settings.api_prefix)
 
     return app
